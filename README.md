@@ -42,6 +42,7 @@ Students spend excessive time reviewing lengthy study materials. This tool lets 
 
 ## Usage
 > Note: PDF upload support is planned as a future enhancement (see Issue #3).
+> Note: Large notes may take longer to process; a file-size limit and clearer error messages are planned (see Issue #4).
 1. Paste your notes in the text box
 2. Click **Summarize**
 3. View the summary, key points, and flashcards
