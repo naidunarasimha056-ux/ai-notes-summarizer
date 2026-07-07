@@ -1,7 +1,7 @@
 import os
 import json
 from flask import Flask, request, jsonify, render_template
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -13,10 +13,10 @@ app = Flask(__name__)
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if not API_KEY:
     print("WARNING: GEMINI_API_KEY not set. Set it in your .env file.")
-else:
-    genai.configure(api_key=API_KEY)
 
-MODEL_NAME = "gemini-1.5-flash"  # free-tier friendly model
+client = genai.Client(api_key=API_KEY) if API_KEY else None
+
+MODEL_NAME = "gemini-2.5-flash"  # current free-tier friendly model
 
 
 def build_prompt(notes_text):
@@ -58,8 +58,10 @@ def summarize():
         return jsonify({"error": "Server is missing GEMINI_API_KEY. Check your .env file."}), 500
 
     try:
-        model = genai.GenerativeModel(MODEL_NAME)
-        response = model.generate_content(build_prompt(notes_text))
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=build_prompt(notes_text)
+        )
 
         raw_text = response.text.strip()
 
