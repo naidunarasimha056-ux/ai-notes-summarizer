@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Notes Summarizer</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f7f7f9; }
+  h1 { color: #2b2d42; }
+  textarea { width: 100%; height: 200px; padding: 10px; font-size: 15px; border-radius: 8px; border: 1px solid #ccc; }
+  button { background: #4361ee; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 10px; }
+  button:hover { background: #3a56d4; }
+  .section { background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .flashcard { background: #eef1ff; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .error { color: #d00000; font-weight: bold; }
+  #loading { display:none; color:#4361ee; margin-top:10px; }
+</style>
+</head>
+<body>
+  <h1>📚 AI Notes Summarizer</h1>
+  <p>Paste your notes below and get a summary, key points, and flashcards.</p>
+
+  <textarea id="notesInput" placeholder="Paste your notes here..."></textarea><br>
+  <button onclick="summarize()">Summarize</button>
+  <div id="loading">Thinking... ⏳</div>
+  <div id="errorBox" class="error"></div>
+
+  <div id="results" style="display:none;">
+    <div class="section">
+      <h2>Summary</h2>
+      <p id="summaryText"></p>
+    </div>
+    <div class="section">
+      <h2>Key Points</h2>
+      <ul id="keyPointsList"></ul>
+    </div>
+    <div class="section">
+      <h2>Flashcards</h2>
+      <div id="flashcardsList"></div>
+    </div>
+    <button onclick="downloadSummary()">⬇ Download Summary</button>
+  </div>
+
+<script>
+let lastResult = null;
+
+async function summarize() {
+  const notes = document.getElementById('notesInput').value.trim();
+  const errorBox = document.getElementById('errorBox');
+  errorBox.textContent = '';
+  document.getElementById('results').style.display = 'none';
+
+  if (!notes) {
+    errorBox.textContent = 'Please paste some notes first.';
+    return;
+  }
+
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    const res = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes })
+    });
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
+
+    if (!res.ok) {
+      errorBox.textContent = data.error || 'Something went wrong.';
+      return;
+    }
+
+    lastResult = data;
+    document.getElementById('summaryText').textContent = data.summary;
+
+    const kpList = document.getElementById('keyPointsList');
+    kpList.innerHTML = '';
+    data.key_points.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = p;
+      kpList.appendChild(li);
+    });
+
+    const fcList = document.getElementById('flashcardsList');
+    fcList.innerHTML = '';
+    data.flashcards.forEach(fc => {
+      const div = document.createElement('div');
+      div.className = 'flashcard';
+      div.innerHTML = `<strong>Q:</strong> ${fc.question}<br><strong>A:</strong> ${fc.answer}`;
+      fcList.appendChild(div);
+    });
+
+    document.getElementById('results').style.display = 'block';
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    errorBox.textContent = 'Network error. Is the server running?';
+  }
+}
+
+function downloadSummary() {
+  if (!lastResult) return;
+  let text = `SUMMARY\n${lastResult.summary}\n\nKEY POINTS\n`;
+  lastResult.key_points.forEach((p, i) => text += `${i+1}. ${p}\n`);
+  text += `\nFLASHCARDS\n`;
+  lastResult.flashcards.forEach((fc, i) => text += `${i+1}. Q: ${fc.question}\n   A: ${fc.answer}\n`);
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'notes_summary.txt';
+  a.click();
+}
+</script>
+</body>
+</html>
