@@ -1,5 +1,6 @@
 # AI Notes Summarizer
 
+
 Students spend excessive time reviewing lengthy study materials. This tool lets you paste your notes and instantly get:
 - A concise summary
 - Extracted key points
@@ -40,6 +41,7 @@ Students spend excessive time reviewing lengthy study materials. This tool lets 
 5. Open your browser to `http://localhost:5000`
 
 ## Usage
+> Note: PDF upload support is planned as a future enhancement (see Issue #3).
 1. Paste your notes in the text box
 2. Click **Summarize**
 3. View the summary, key points, and flashcards
